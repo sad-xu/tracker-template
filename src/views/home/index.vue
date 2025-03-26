@@ -1,5 +1,9 @@
 <template>
-  <div class="home">home</div>
+  <div class="home">
+    home
+
+    <a-button type="primary">Primary</a-button>
+  </div>
 </template>
 
 <script lang="ts" setup>

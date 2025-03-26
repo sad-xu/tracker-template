@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
   linkActiveClass: 'active-route',
-  history: createWebHistory(),
+  history: createWebHistory('/tracker'),
   routes: [
     {
       path: '/',

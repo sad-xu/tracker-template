@@ -6,30 +6,17 @@
     actionNumLimit: 5,
     showHotSpots: IS_DEV,
     baseURL: () => `${IS_DEV ? '' : '/'}api/point/batch?token=${localStorage.getItem('token')}`,
-    directiveType: 'click',
-    logToData: logList => (JSON.stringify({
-      burying_id: 1,
-      point_list: logList
-    }))
   })
   tracker.init({
     Vue,
     router
   })
-  Vue.prototype.$tracker = tracker
-
-  // 报错收集
-  Vue.config.errorHandler = (err, vm, info) => {
-    tracker.addErrorLog(err, info)
-  }
-  window.addEventListener('error', e => {})
-  window.addEventLisener('unhandledrejection', e => {})
 
   // 声明式
   v-log
 
   // 命令式
-  this.$tracker.addLog({ k: v })
+  this.$tracker.addActionLog({ k: v })
 */
 
 class Tracker {
@@ -39,22 +26,16 @@ class Tracker {
     showHotSpots = false,
     // 请求地址 String | Function
     baseURL = '/',
-    // v-log 触发事件
-    directiveType = 'click',
-    // 构造待发送数据
-    logToData = (logList) => JSON.stringify({ d: logList }),
   } = {}) {
     this.version = '1.0';
     this.showHotSpots = showHotSpots;
     this.pageNumLimit = pageNumLimit;
     this.actionNumLimit = actionNumLimit;
     this.baseURL = baseURL;
-    this.directiveType = directiveType;
-    this.logToData = logToData;
     /**
      * 当前页面记录
      * from to start end duration
-     * actions: [{ time, type, id, extra }]
+     * actions: [{ time,  extra }]
      */
     this.log = null;
     // 所有未发送记录
@@ -94,49 +75,80 @@ class Tracker {
       next();
     });
     // Vue directive
-    const directiveType = this.directiveType;
     Vue.directive('log', {
-      bind: (el, binding) => {
+      mounted: (el, binding) => {
         const handleClick = function () {
-          that.addLog(binding.value, directiveType);
+          that.addActionLog(binding.value);
         };
-        el.addEventListener(directiveType, handleClick);
+        el.addEventListener('click', handleClick);
         el.removeClickEvent = function () {
-          this.removeEventListener(directiveType, handleClick);
+          this.removeEventListener('click', handleClick);
         };
         if (that.showHotSpots) {
           el.style.boxShadow = 'inset 0px 0px 3px 2px #15d6ba';
         }
       },
-      unbind: (el) => {
+      beforeUnmount: (el) => {
         el.removeClickEvent();
       },
     });
+    // 性能
+    this.getPerformance();
+    // 报错收集
+    Vue.config.errorHandler = (err, vm, info) => {
+      this.addErrLog(err, info);
+    };
+    window.addEventListener('error', (e) => {
+      this.addErrLog(e);
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      this.addErrLog(e);
+    });
   }
 
-  // 获取请求地址
+  /** 构造待发送数据 */
+  logToData(logList) {
+    return JSON.stringify(logList);
+  }
+
+  /** 获取请求地址 */
   getBaseURL() {
     return this.baseURL instanceof Function ? this.baseURL() : this.baseURL;
   }
 
-  // 获取当前时间
+  /** 获取当前时间 */
   getTime() {
     return Math.round(Date.now() / 1000);
   }
 
-  // // 获取设备信息
-  // getDeviceInfo() {
-  //   let navigator = window.navigator
-  //   return {
-  //     userAgent: navigator.userAgent,
-  //     networkType: navigator.confirmWebWideTrackingException.effectiveType,
-  //     pixelRatio: window.devicePixelRatio,
-  //     width: document.documentElement.clientWidth,
-  //     height: document.documentElement.clientHeight
-  //   }
-  // }
+  /** 获取设备信息 */
+  getDeviceInfo() {
+    const navigator = window.navigator;
+    return {
+      userAgent: navigator.userAgent,
+      pixelRatio: window.devicePixelRatio,
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+    };
+  }
 
-  // beacon 兼容
+  /** 获取性能指标 */
+  getPerformance() {
+    new PerformanceObserver((entryList) => {
+      const entries = entryList.getEntries();
+      const lastEntry = entries[entries.length - 1];
+      console.log(entries);
+      const pLog = {
+        type: 'performance',
+        time: this.getTime(),
+        lcp: lastEntry.renderTime || lastEntry.loadTime,
+        ...this.getDeviceInfo(),
+      };
+      this.sendLog(pLog);
+    }).observe({ type: 'largest-contentful-paint', buffered: true });
+  }
+
+  /** beacon 兼容 */
   ployfillSendBeacon() {
     const that = this;
     if ('sendBeacon' in window.navigator) return;
@@ -153,16 +165,15 @@ class Tracker {
     };
   }
 
-  // 手动增加记录
-  addLog(extra, type = 'manual') {
+  /** 手动增加记录 */
+  addActionLog(info) {
     this.log.actions.push({
       time: this.getTime(),
-      type,
-      extra: typeof extra === 'object' ? JSON.stringify(extra) : extra,
+      info: typeof info === 'object' ? JSON.stringify(info) : info,
     });
   }
 
-  // 切换路由
+  /** 切换路由 */
   enterNewPage(from, to) {
     const now = this.getTime();
     if (this.log) {
@@ -172,6 +183,7 @@ class Tracker {
       this.logList.push(log);
     }
     this.log = {
+      type: 'page',
       from: from.fullPath,
       to: to.fullPath,
       start: now,
@@ -189,18 +201,34 @@ class Tracker {
     }
   }
 
-  // 报错信息
-  // addErrLog(err, extra) {
-  //   let errLog = {
-  //     type: 'error',
-  //     time: this.getTime(),
-  //     msg: err.stack.toString(),
-  //     extra: extra
-  //   }
-  //   ...
-  // }
+  /** 报错信息 */
+  addErrLog(e, extra) {
+    const errLog = {
+      type: 'error',
+      errType: 'unknown',
+      time: this.getTime(),
+      msg: '',
+      stack: '',
+      extra: extra,
+    };
 
-  // 发送日志
+    if (e instanceof Error) {
+      const { message, stack } = e;
+      errLog.errType = 'code';
+      errLog.msg = message;
+      errLog.stack = stack;
+    } else if (e instanceof PromiseRejectionEvent) {
+      errLog.errType = 'reject';
+      errLog.msg = e.reason;
+    } else if (e?.message) {
+      errLog.msg = e.message;
+    } else if (typeof e === 'string') {
+      errLog.msg = e;
+    }
+    this.sendLog([errLog]);
+  }
+
+  /** 发送日志 */
   sendLog(logList) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', this.getBaseURL());
