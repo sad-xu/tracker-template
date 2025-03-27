@@ -12,6 +12,15 @@ export function test() {
   return axios.get(`${url}/test`);
 }
 
+/** 获取日志 */
+export function getLogList(type = '') {
+  return axios.get(`${url}/getLogList`, {
+    params: {
+      type,
+    },
+  });
+}
+
 // /** 获取本地文件目录 */
 // export function getDirList() {
 //   return axios.get(`${url}/getDirList`);

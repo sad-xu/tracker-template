@@ -8,25 +8,32 @@
     baseURL: () => `${IS_DEV ? '' : '/'}api/point/batch?token=${localStorage.getItem('token')}`,
   })
   tracker.init({
-    Vue,
+    Vue: app,
     router
   })
+
+  // 添加到全局变量
+  Vue.prototype.$tracker = tracker; // Vue2
+  app.provide('$tracker', tracker); // Vue3
 
   // 声明式
   v-log
 
   // 命令式
-  this.$tracker.addActionLog({ k: v })
+  this.$tracker.addActionLog({ k: v }) // Vue2
+  inject('$tracker').addActionLog(); // Vue3
 */
 
 class Tracker {
   constructor({
+    appId = 0,
     pageNumLimit = 5,
     actionNumLimit = 5,
     showHotSpots = false,
     // 请求地址 String | Function
     baseURL = '/',
   } = {}) {
+    this.appId = appId;
     this.version = '1.0';
     this.showHotSpots = showHotSpots;
     this.pageNumLimit = pageNumLimit;
@@ -46,16 +53,15 @@ class Tracker {
 
   init({ Vue, router } = {}) {
     const that = this;
-    // sendBeacon 页面关闭前
-    this.ployfillSendBeacon();
+    // 页面关闭前
     window.addEventListener(
       'beforeunload',
       () => {
         const log = this.log;
-        log.end = this.getTime();
+        log.end = Date.now();
         log.duration = log.end - log.start - log.duration;
         this.logList.push(log);
-        window.navigator.sendBeacon(this.getBaseURL(), this.logToData(this.logList));
+        this.sendBeacon(this.logList);
       },
       false
     );
@@ -63,10 +69,10 @@ class Tracker {
     window.addEventListener('visibilitychange', () => {
       const state = document.visibilityState;
       if (state === 'hidden') {
-        this.pauseTime = this.getTime();
+        this.pauseTime = Date.now();
       } else if (state === 'visible') {
         // fix: 页面在后台初始化时，pauseTime = 0，最终发送时duration为负数
-        this.log && (this.log.duration += this.pauseTime ? this.getTime() - this.pauseTime : 0);
+        this.log && (this.log.duration += this.pauseTime ? Date.now() - this.pauseTime : 0);
       }
     });
     // router
@@ -106,19 +112,30 @@ class Tracker {
     });
   }
 
-  /** 构造待发送数据 */
-  logToData(logList) {
-    return JSON.stringify(logList);
+  /** 发送日志 beacon 兼容 */
+  sendBeacon(log) {
+    // TODO：数据过大不使用beacon
+    if ('sendBeacon' in window.navigator) {
+      window.navigator.sendBeacon(this.baseURL, JSON.stringify(log));
+    } else {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', this.baseURL, false);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('Content-type', 'application/json');
+      try {
+        xhr.send(log);
+      } catch (err) {
+        console.log(err);
+      }
+    }
   }
 
-  /** 获取请求地址 */
-  getBaseURL() {
-    return this.baseURL instanceof Function ? this.baseURL() : this.baseURL;
-  }
-
-  /** 获取当前时间 */
-  getTime() {
-    return Math.round(Date.now() / 1000);
+  /** 通用信息 */
+  getCommonInfo() {
+    return {
+      appId: this.appId,
+      time: Date.now(),
+    };
   }
 
   /** 获取设备信息 */
@@ -140,42 +157,17 @@ class Tracker {
       console.log(entries);
       const pLog = {
         type: 'performance',
-        time: this.getTime(),
         lcp: lastEntry.renderTime || lastEntry.loadTime,
+        ...this.getCommonInfo(),
         ...this.getDeviceInfo(),
       };
-      this.sendLog(pLog);
+      this.sendBeacon([pLog]);
     }).observe({ type: 'largest-contentful-paint', buffered: true });
-  }
-
-  /** beacon 兼容 */
-  ployfillSendBeacon() {
-    const that = this;
-    if ('sendBeacon' in window.navigator) return;
-    window.navigator.sendBeacon = function (url, log) {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url, false);
-      xhr.withCredentials = true;
-      xhr.setRequestHeader('Content-type', 'application/json');
-      try {
-        xhr.send(that.logToData(log));
-      } catch (err) {
-        console.log(err);
-      }
-    };
-  }
-
-  /** 手动增加记录 */
-  addActionLog(info) {
-    this.log.actions.push({
-      time: this.getTime(),
-      info: typeof info === 'object' ? JSON.stringify(info) : info,
-    });
   }
 
   /** 切换路由 */
   enterNewPage(from, to) {
-    const now = this.getTime();
+    const now = Date.now();
     if (this.log) {
       const log = this.log;
       log.end = now;
@@ -184,6 +176,7 @@ class Tracker {
     }
     this.log = {
       type: 'page',
+      appId: this.appId,
       from: from.fullPath,
       to: to.fullPath,
       start: now,
@@ -197,19 +190,19 @@ class Tracker {
     ) {
       const logList = this.logList;
       this.logList = [];
-      this.sendLog(logList);
+      this.sendBeacon(logList);
     }
   }
 
   /** 报错信息 */
-  addErrLog(e, extra) {
+  addErrLog(e, extra = '') {
     const errLog = {
       type: 'error',
       errType: 'unknown',
-      time: this.getTime(),
       msg: '',
       stack: '',
       extra: extra,
+      ...this.getCommonInfo(),
     };
 
     if (e instanceof Error) {
@@ -228,12 +221,12 @@ class Tracker {
     this.sendLog([errLog]);
   }
 
-  /** 发送日志 */
-  sendLog(logList) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', this.getBaseURL());
-    xhr.setRequestHeader('Content-type', 'application/json');
-    xhr.send(this.logToData(logList));
+  /** 手动增加记录 */
+  addActionLog(info) {
+    this.log.actions.push({
+      ...this.getCommonInfo(),
+      info: typeof info === 'object' ? JSON.stringify(info) : info,
+    });
   }
 }
 

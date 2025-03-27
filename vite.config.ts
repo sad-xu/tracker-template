@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import autoprefixer from 'autoprefixer';
 import { vitePluginForArco } from '@arco-plugins/vite-vue';
+// import { VitePWA } from 'vite-plugin-pwa';
 // import { visualizer } from 'rollup-plugin-visualizer';
 
 const isDev = process.env.NODE_ENV == 'development';
@@ -22,9 +23,12 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    vitePluginForArco({
-      style: 'css',
-    }),
+    vitePluginForArco({ style: 'css' }),
+    // VitePWA({
+    //   registerType: 'autoUpdate',
+    //   injectRegister: 'auto',
+
+    //  })
     // visualizer({
     //   open: true,
     // }),

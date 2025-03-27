@@ -1,14 +1,23 @@
 <template>
   <div class="manage">
     <a-button v-log="'按钮1'">声明式</a-button>
+    <a-button @click="onAction">命令式</a-button>
 
     <a-button @click="onCodeError">代码错误</a-button>
     <a-button @click="onRejectError">异步未捕获错误</a-button>
   </div>
 </template>
 
-<script lang="ts" setup>
-  import { Button as AButton } from '@arco-design/web-vue';
+<script lang="js" setup>
+  import { inject } from 'vue';
+  // import { Button as AButton } from '@arco-design/web-vue';
+
+  const $tracker = inject('$tracker');
+
+  const onAction = () => {
+    console.log($tracker);
+    $tracker.addActionLog({a:1,b:'222'});
+  };
 
   const onCodeError = () => {
     const a = {};
