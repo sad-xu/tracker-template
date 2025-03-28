@@ -9,10 +9,29 @@ const router = createRouter({
       name: 'home',
       component: () => import('@/views/home/index.vue'),
     },
+    // 性能数据
     {
-      path: '/manage',
-      name: 'manage',
-      component: () => import('@/views/manage/index.vue'),
+      path: '/performance',
+      name: 'performance',
+      component: () => import('@/views/home/performance.vue'),
+    },
+    // 页面+动作数据
+    {
+      path: '/page',
+      name: 'page',
+      component: () => import('@/views/home/page.vue'),
+    },
+    // 报错数据
+    {
+      path: '/error',
+      name: 'error',
+      component: () => import('@/views/home/error.vue'),
+    },
+    // 模拟
+    {
+      path: '/mock',
+      name: 'mock',
+      component: () => import('@/views/mock/index.vue'),
     },
   ],
   scrollBehavior() {

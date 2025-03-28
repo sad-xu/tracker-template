@@ -4,7 +4,8 @@
     <a-button @click="onAction">命令式</a-button>
 
     <a-button @click="onCodeError">代码错误</a-button>
-    <a-button @click="onRejectError">异步未捕获错误</a-button>
+    <a-button @click="onRejectError">异步未捕获错误1</a-button>
+    <a-button @click="onRejectError2">异步未捕获错误2</a-button>
   </div>
 </template>
 
@@ -34,6 +35,18 @@
       console.log('res', res);
     });
   };
+
+  const onRejectError2 = () => {
+    const p = () =>
+      Promise.resolve().then(() => {
+        const a = {};
+        // @ts-ignore
+        a.customFn('/');
+      });
+    p().then((res) => {
+      console.log('res', res);
+    });
+  }
 </script>
 
 <style lang="scss" scoped>

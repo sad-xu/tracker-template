@@ -5,7 +5,7 @@
     pageNumLimit: 5,
     actionNumLimit: 5,
     showHotSpots: IS_DEV,
-    baseURL: () => `${IS_DEV ? '' : '/'}api/point/batch?token=${localStorage.getItem('token')}`,
+    baseURL: 'xxx/api/log',
   })
   tracker.init({
     Vue: app,
@@ -30,7 +30,7 @@ class Tracker {
     pageNumLimit = 5,
     actionNumLimit = 5,
     showHotSpots = false,
-    // 请求地址 String | Function
+    // 请求地址
     baseURL = '/',
   } = {}) {
     this.appId = appId;
@@ -212,13 +212,19 @@ class Tracker {
       errLog.stack = stack;
     } else if (e instanceof PromiseRejectionEvent) {
       errLog.errType = 'reject';
-      errLog.msg = e.reason;
+      const reason = e.reason;
+      if (reason instanceof Error) {
+        errLog.msg = reason.message;
+        errLog.stack = reason.stack;
+      } else {
+        errLog.msg = reason;
+      }
     } else if (e?.message) {
       errLog.msg = e.message;
     } else if (typeof e === 'string') {
       errLog.msg = e;
     }
-    this.sendLog([errLog]);
+    this.sendBeacon([errLog]);
   }
 
   /** 手动增加记录 */

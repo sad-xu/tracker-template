@@ -4,11 +4,20 @@
       <a-menu-item key="0" :style="{ padding: 0, marginRight: '38px' }" disabled>
         <div style="font-size: 20px; font-weight: bold">日志</div>
       </a-menu-item>
-      <router-link class="nav" :to="{ name: 'home' }">
+      <router-link :to="{ name: 'home' }">
         <a-menu-item key="1">日志首页</a-menu-item>
       </router-link>
-      <router-link class="nav" :to="{ name: 'manage' }">
-        <a-menu-item key="2">模拟</a-menu-item>
+      <router-link :to="{ name: 'performance' }">
+        <a-menu-item key="2">性能数据</a-menu-item>
+      </router-link>
+      <router-link :to="{ name: 'page' }">
+        <a-menu-item key="3">页面数据</a-menu-item>
+      </router-link>
+      <router-link :to="{ name: 'error' }">
+        <a-menu-item key="4">报错数据</a-menu-item>
+      </router-link>
+      <router-link :to="{ name: 'mock' }">
+        <a-menu-item key="5">模拟</a-menu-item>
       </router-link>
     </a-menu>
   </div>

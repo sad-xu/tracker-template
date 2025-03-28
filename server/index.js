@@ -25,32 +25,33 @@ app.all('*', function (res, req, next) {
 });
 
 // 获取js.map源码文件
-app.get('/getSourceMap', (req, res) => {
+app.get('/api/getSourceMap', (req, res) => {
   const { fileName, env } = req.query;
   console.log('fileName', fileName);
   console.log('env', env);
   if (env === 'development') {
-    // const mapFile = path.join(__filename, '..', fileName)
-    // console.log('mapFile', mapFile)
-    fs.readFile(fileName, (err, data) => {
+    const mapFile = path.join(__filename, '../sourcemap', fileName);
+    console.log('mapFile-', mapFile);
+    fs.readFile(mapFile, (err, data) => {
       if (err) {
-        console.error('server-getmap', err);
-        return;
+        console.log(err);
+        res.send('');
+      } else {
+        res.send(data);
       }
-      res.send(data);
     });
   } else {
     // req.query 获取接口参数
-    const mapFile = path.join(__filename, '..', 'dist/assets');
-    // 拿到dist目录下对应map文件的路径
-    const mapPath = path.join(mapFile, `${fileName}.map`);
-    fs.readFile(mapPath, (err, data) => {
-      if (err) {
-        console.error('server-getmap', err);
-        return;
-      }
-      res.send(data);
-    });
+    // const mapFile = path.join(__filename, '..', 'dist/assets');
+    // // 拿到dist目录下对应map文件的路径
+    // const mapPath = path.join(mapFile, `${fileName}.map`);
+    // fs.readFile(mapPath, (err, data) => {
+    //   if (err) {
+    //     console.error('server-getmap', err);
+    //     return;
+    //   }
+    //   res.send(data);
+    // });
   }
 });
 
@@ -79,12 +80,12 @@ app.post('/api/log', async (req, res) => {
     let length = Object.keys(req.body).length;
     if (length) {
       // 数据量大时不会用 sendbeacon，用xhr的形式
-      allLogList.push(...req.body);
+      allLogList.unshift(...req.body);
     } else {
       // 兼容 sendbeacon 的传输数据格式
       const data = await coBody.json(req);
       if (!data) return;
-      allLogList.push(...data);
+      allLogList.unshift(...data);
     }
     res.send({
       code: 200,
@@ -92,7 +93,7 @@ app.post('/api/log', async (req, res) => {
     });
   } catch (err) {
     res.send({
-      code: 203,
+      code: 500,
       meaage: '上报失败！',
       err,
     });

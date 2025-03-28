@@ -57,6 +57,7 @@ export default defineConfig({
     // css 不拆分文件
     cssCodeSplit: false,
     minify: 'esbuild',
+    sourcemap: true,
   },
   esbuild: {
     // 去除console

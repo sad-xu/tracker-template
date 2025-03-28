@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const url = '/api';
 
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 axios.interceptors.response.use(
   (res) => res.data,
   (error) => Promise.reject(error)
@@ -14,9 +16,23 @@ export function test() {
 
 /** 获取日志 */
 export function getLogList(type = '') {
-  return axios.get(`${url}/getLogList`, {
+  if (IS_DEV) {
+    return axios.get(`${url}/getLogList`, {
+      params: {
+        type,
+      },
+    });
+  } else {
+    return Promise.resolve({ data: [] });
+  }
+}
+
+/** 获取map文件 */
+export function getSourceMap({ fileName, env }) {
+  return axios.get(`${url}/getSourceMap`, {
     params: {
-      type,
+      fileName,
+      env,
     },
   });
 }
