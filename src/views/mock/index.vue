@@ -1,11 +1,14 @@
 <template>
   <div class="manage">
-    <a-button v-log="'按钮1'">声明式</a-button>
-    <a-button @click="onAction">命令式</a-button>
-
-    <a-button @click="onCodeError">代码错误</a-button>
-    <a-button @click="onRejectError">异步未捕获错误1</a-button>
-    <a-button @click="onRejectError2">异步未捕获错误2</a-button>
+    <a-space style="margin-bottom: 20px">
+      <a-button v-log="'按钮1'">声明式</a-button>
+      <a-button @click="onAction">命令式</a-button>
+    </a-space>
+    <a-space>
+      <a-button @click="onCodeError">代码错误</a-button>
+      <a-button @click="onRejectError">异步未捕获错误1</a-button>
+      <a-button @click="onRejectError2">异步未捕获错误2</a-button>
+    </a-space>
   </div>
 </template>
 

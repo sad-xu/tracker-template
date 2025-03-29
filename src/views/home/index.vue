@@ -1,5 +1,5 @@
 <template>
-  <div>Home</div>
+  <div>日志看板</div>
 </template>
 
 <script lang="js" setup>

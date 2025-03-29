@@ -13,7 +13,7 @@ const tracker = new Tracker({
   appId: 1,
   pageNumLimit: 2,
   actionNumLimit: 5,
-  showHotSpots: IS_DEV,
+  showHotSpots: true, // IS_DEV,
   baseURL: 'http://localhost:3000/api/log', // () => `${IS_DEV ? '' : '/'}api/point/batch?token=${localStorage.getItem('token')}`
 });
 tracker.init({ Vue: app, router });
