@@ -104,12 +104,31 @@ class Tracker {
     Vue.config.errorHandler = (err, vm, info) => {
       this.addErrLog(err, info);
     };
-    window.addEventListener('error', (e) => {
-      this.addErrLog(e);
+    window.addEventListener('error', (err) => {
+      this.addErrLog(err);
     });
-    window.addEventListener('unhandledrejection', (e) => {
-      this.addErrLog(e);
+    window.addEventListener('unhandledrejection', (err) => {
+      this.addErrLog(err);
     });
+    // 已捕获的异步错误
+    const originalCatch = Promise.prototype.catch;
+    Promise.prototype.catch = function (onRejected) {
+      return originalCatch.call(this, function (err) {
+        that.addErrLog(err);
+        if (typeof onRejected === 'function') {
+          return onRejected(err);
+        }
+        throw err;
+      });
+    };
+    // Error
+    // const OriginalError = Error;
+    // // eslint-disable-next-line no-global-assign
+    // Error = function (message) {
+    //   const err = new OriginalError(message);
+    //   that.addErrLog(err);
+    //   return err;
+    // };
   }
 
   /** 发送日志 beacon 兼容 */
@@ -196,6 +215,7 @@ class Tracker {
 
   /** 报错信息 */
   addErrLog(e, extra = '') {
+    console.log('tracker:', e);
     const errLog = {
       type: 'error',
       errType: 'unknown',

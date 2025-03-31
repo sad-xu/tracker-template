@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import autoprefixer from 'autoprefixer';
 import { vitePluginForArco } from '@arco-plugins/vite-vue';
-// import { VitePWA } from 'vite-plugin-pwa';
+import { VitePWA } from 'vite-plugin-pwa';
 // import { visualizer } from 'rollup-plugin-visualizer';
 
 const isDev = process.env.NODE_ENV == 'development';
@@ -24,11 +24,64 @@ export default defineConfig({
   plugins: [
     vue(),
     vitePluginForArco({ style: 'css' }),
-    // VitePWA({
-    //   registerType: 'autoUpdate',
-    //   injectRegister: 'auto',
-
-    //  })
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      devOptions: {
+        enabled: true,
+      },
+      includeAssets: ['favicon.png'],
+      manifest: {
+        name: 'Tracker Demo',
+        short_name: 'tracker',
+        description: 'desc',
+        theme_color: '#343838',
+        display: 'fullscreen',
+        start_url: './?from=pwa',
+        icons: [
+          {
+            src: 'logo192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'logo512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /\.(?:html)$/,
+            handler: 'NetworkFirst',
+          },
+          {
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'jscss',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 15 * 86400,
+              },
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|ttf|json)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'common',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 30 * 86400,
+              },
+            },
+          },
+        ],
+      },
+    }),
     // visualizer({
     //   open: true,
     // }),
