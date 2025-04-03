@@ -170,7 +170,9 @@ class Tracker {
 
   /** 获取性能指标 */
   getPerformance() {
+    let flag = false;
     new PerformanceObserver((entryList) => {
+      if (flag) return;
       const entries = entryList.getEntries();
       const lastEntry = entries[entries.length - 1];
       console.log(entries);
@@ -181,6 +183,7 @@ class Tracker {
         ...this.getDeviceInfo(),
       };
       this.sendBeacon([pLog]);
+      flag = true;
     }).observe({ type: 'largest-contentful-paint', buffered: true });
   }
 
