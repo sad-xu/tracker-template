@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
-import Tracker from '@/utils/tracker.js';
+import Tracker from '@/utils/tracker2.js';
 import '@/styles/global.scss';
 
 const app = createApp(App);
@@ -12,7 +12,7 @@ const IS_DEV = process.env.NODE_ENV !== 'production';
 const tracker = new Tracker({
   appId: 1,
   pageNumLimit: 2,
-  actionNumLimit: 5,
+  // actionNumLimit: 5,
   showHotSpots: true, // IS_DEV,
   baseURL: 'http://localhost:3000/api/log', // () => `${IS_DEV ? '' : '/'}api/point/batch?token=${localStorage.getItem('token')}`
 });

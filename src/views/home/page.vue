@@ -1,6 +1,7 @@
 <template>
   <div>
-    <a-table :data="tableData">
+    <p style="margin-bottom: 10px">方式一</p>
+    <a-table :data="tableData" :pagination="false">
       <template #columns>
         <a-table-column title="AppId" data-index="appId" align="center" :width="120">
           <template #cell="{ record }"> {{ record.appId }} </template>
@@ -29,6 +30,30 @@
         </a-table-column>
       </template>
     </a-table>
+    <!--  -->
+    <p style="margin: 20px 0 10px">方式二</p>
+    <a-table :data="tableData2" :pagination="false">
+      <template #columns>
+        <a-table-column title="AppId" data-index="appId" align="center" :width="120">
+          <template #cell="{ record }"> {{ record.appId }} </template>
+        </a-table-column>
+        <a-table-column title="事件" :width="220">
+          <template #cell="{ record }">
+            <div>{{ new Date(record.time).toLocaleString() }}</div>
+          </template>
+        </a-table-column>
+        <a-table-column title="类型" :width="220">
+          <template #cell="{ record }">
+            <div>{{ record.type }}</div>
+          </template>
+        </a-table-column>
+        <a-table-column title="动作" :width="220">
+          <template #cell="{ record }">
+            <div>{{ record.page || record.info }}</div>
+          </template>
+        </a-table-column>
+      </template>
+    </a-table>
   </div>
 </template>
 
@@ -37,6 +62,15 @@
   import { getLogList } from '@/api';
 
   const tableData = ref([]);
+
+  const tableData2 = ref([
+    { appId: 1, time: 1744426901979, type: 'leave', page: '/page' },
+    { appId: 1, time: 1744426901979, type: 'enter', page: '/error' },
+    { appId: 1, time: 1744426938723, type: 'leave', page: '/error' },
+    { appId: 1, time: 1744426938723, type: 'enter', page: '/mock' },
+    { appId: 1, time: 1744426960273, type: 'action', info: '{"a":1,"b":"222"}' },
+    { appId: 1, time: 1744426960624, type: 'action', info: '按钮1' },
+  ]);
 
   onMounted(() => {
     init();

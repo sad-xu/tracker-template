@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const url = '/api';
 
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_DEV = false; //process.env.NODE_ENV !== 'production';
 
 axios.interceptors.response.use(
   (res) => res.data,
