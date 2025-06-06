@@ -7,6 +7,7 @@ const coBody = require('co-body');
 const app = express();
 const { json, urlencoded } = pkg;
 
+app.use(express.text());
 app.use(json({ limit: '100mb' }));
 app.use(
   urlencoded({
@@ -77,6 +78,7 @@ app.get('/api/getLogList', (req, res) => {
 /** 接收日志 */
 app.post('/api/log', async (req, res) => {
   try {
+    console.log(req.body);
     let length = Object.keys(req.body).length;
     if (length) {
       // 数据量大时不会用 sendbeacon，用xhr的形式

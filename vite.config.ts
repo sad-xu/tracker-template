@@ -27,9 +27,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      devOptions: {
-        enabled: true,
-      },
+      // devOptions: {
+      //   enabled: true,
+      // },
       includeAssets: ['favicon.png'],
       manifest: {
         name: 'Tracker Demo',
@@ -114,6 +114,6 @@ export default defineConfig({
   },
   esbuild: {
     // 去除console
-    // drop: isDev ? [] : ['console', 'debugger'],
+    drop: isDev ? [] : ['console', 'debugger'],
   },
 });

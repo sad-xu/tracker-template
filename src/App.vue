@@ -19,6 +19,9 @@
       <router-link :to="{ name: 'mock' }">
         <a-menu-item key="5">模拟</a-menu-item>
       </router-link>
+      <router-link :to="{ name: 'footprint' }">
+        <a-menu-item key="6">足迹</a-menu-item>
+      </router-link>
     </a-menu>
   </div>
   <div style="padding: 12px">

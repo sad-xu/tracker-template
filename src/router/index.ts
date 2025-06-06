@@ -33,6 +33,12 @@ const router = createRouter({
       name: 'mock',
       component: () => import('@/views/mock/index.vue'),
     },
+    // 足迹
+    {
+      path: '/footprint',
+      name: 'footprint',
+      component: () => import('@/views/home/footprint.vue'),
+    },
   ],
   scrollBehavior() {
     return { top: 0 };

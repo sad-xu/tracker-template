@@ -10,11 +10,12 @@ const app = createApp(App);
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
 const tracker = new Tracker({
-  appId: 1,
+  appId: 'Kayou.ywzs.app',
   pageNumLimit: 2,
   actionNumLimit: 5,
   showHotSpots: true, // IS_DEV,
-  baseURL: 'http://localhost:3000/api/log', // () => `${IS_DEV ? '' : '/'}api/point/batch?token=${localStorage.getItem('token')}`
+  baseURL: '/api/log', // () => `${IS_DEV ? '' : '/'}api/point/batch`
+  // baseURL: 'https://logcenter.kayou110.cn/api/applogs',
 });
 tracker.init({ Vue: app, router });
 app.provide('$tracker', tracker);
