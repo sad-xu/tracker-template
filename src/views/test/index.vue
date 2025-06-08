@@ -7,8 +7,10 @@
   </div>
 </template>
 
-<script>
+<script setup>
   const a = 1;
+
+  // a += 2;
 </script>
 
 <style lang="scss" scoped>
