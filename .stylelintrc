@@ -5,10 +5,9 @@
     "stylelint-config-rational-order"
   ],
   "plugins": [
-    "stylelint-scss"
+    "stylelint-scss",
+    "stylelint-order"
   ],
   "defaultSeverity": "warning",
-  "rules": {
-    "selector-class-pattern": null
-  }
+  "rules": {}
 }

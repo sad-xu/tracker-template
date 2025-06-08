@@ -114,6 +114,6 @@ export default defineConfig({
   },
   esbuild: {
     // 去除console
-    // drop: isDev ? [] : ['console', 'debugger'],
+    drop: isDev ? [] : ['console', 'debugger'],
   },
 });
