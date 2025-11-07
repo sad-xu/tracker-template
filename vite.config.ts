@@ -8,8 +8,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 const isDev = process.env.NODE_ENV == 'development';
 
+const base = '/tracker';
+
 export default defineConfig({
-  base: '/tracker',
+  base: base,
   server: {
     port: 8777,
     host: true,
@@ -37,7 +39,8 @@ export default defineConfig({
         description: 'desc',
         theme_color: '#343838',
         display: 'fullscreen',
-        start_url: './?from=pwa',
+        start_url: base + '/?from=pwa',
+        scope: base,
         icons: [
           {
             src: 'logo192.png',
@@ -52,16 +55,24 @@ export default defineConfig({
         ],
       },
       workbox: {
+        globPatterns: ['**/*.{js,css}'],
+        navigateFallback: null,
+        // 导入外部脚本
+        importScripts: ['./sw-custom-headers.js'],
         runtimeCaching: [
           {
-            urlPattern: /\.(?:html)$/,
-            handler: 'NetworkFirst',
+            urlPattern: /\.(?:html)/,
+            handler: 'NetworkOnly',
           },
           {
-            urlPattern: /\.(?:js|css)$/,
+            urlPattern: ({ request }) => request.destination === 'document',
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /\.(?:js|css)/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'jscss',
+              cacheName: 'jscss2',
               expiration: {
                 maxEntries: 60,
                 maxAgeSeconds: 15 * 86400,
@@ -69,7 +80,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|ttf|json)$/,
+            urlPattern: /\.(?:png|jpg|jpeg|svg|ttf|json)/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'common',

@@ -2,10 +2,10 @@
   <div style="background-color: #f2f3f5">
     <a-menu mode="horizontal" :default-selected-keys="['1']">
       <a-menu-item key="0" :style="{ padding: 0, marginRight: '38px' }" disabled>
-        <div style="font-size: 20px; font-weight: bold">日志</div>
+        <div style="font-weight: bold; font-size: 20px">日志</div>
       </a-menu-item>
       <router-link :to="{ name: 'home' }">
-        <a-menu-item key="1">日志首页</a-menu-item>
+        <a-menu-item key="1">首页</a-menu-item>
       </router-link>
       <router-link :to="{ name: 'performance' }">
         <a-menu-item key="2">性能数据</a-menu-item>

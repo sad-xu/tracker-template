@@ -96,9 +96,14 @@ class Tracker {
       this.getPerformance();
       // 报错收集
       Vue.config.errorHandler = (err, vm, info) => {
-        this.addErrLog(err, info);
+        this.addErrLog(err, '', info);
       };
       window.addEventListener('error', (err) => {
+        if (err.message?.includes('Unexpected token')) {
+          // 资源加载异常
+          window.location.reload();
+          return;
+        }
         this.addErrLog(err);
       });
       window.addEventListener('unhandledrejection', (err) => {
@@ -127,28 +132,53 @@ class Tracker {
   /** 获取性能指标+设备信息 */
   getPerformance() {
     try {
-      let flag = false;
-      new PerformanceObserver((entryList) => {
-        if (flag) return;
-        const entries = entryList.getEntries();
-        const lastEntry = entries[entries.length - 1];
+      if (PerformanceObserver.supportedEntryTypes?.some((v) => v === 'largest-contentful-paint')) {
+        let flag = false;
+        new PerformanceObserver((entryList) => {
+          if (flag) return;
+          const entries = entryList.getEntries();
+          const lastEntry = entries[entries.length - 1];
+          this.pushLog({
+            ...this.getCommonInfo(),
+            message: 'performance',
+            type: 'performance',
+            level: 'Info',
+            lcp: lastEntry.renderTime || lastEntry.loadTime,
+            userAgent: navigator.userAgent,
+            pixelRatio: window.devicePixelRatio,
+            width: document.documentElement.clientWidth,
+            height: document.documentElement.clientHeight,
+          });
+          flag = true;
+        }).observe({
+          entryTypes: ['largest-contentful-paint'],
+        });
+      } else {
         this.pushLog({
           ...this.getCommonInfo(),
           message: 'performance',
           type: 'performance',
           level: 'Info',
-          lcp: lastEntry.renderTime || lastEntry.loadTime,
           userAgent: navigator.userAgent,
           pixelRatio: window.devicePixelRatio,
           width: document.documentElement.clientWidth,
           height: document.documentElement.clientHeight,
         });
-        flag = true;
-      }).observe({
-        entryTypes: ['largest-contentful-paint'],
-      });
+      }
     } catch (e) {
       console.log(e);
+      // 保底收集设备信息
+      this.pushLog({
+        ...this.getCommonInfo(),
+        message: 'performance',
+        type: 'performance',
+        level: 'Info',
+        lcpErr: `${e}`?.slice(0, 500),
+        userAgent: navigator.userAgent,
+        pixelRatio: window.devicePixelRatio,
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight,
+      });
     }
   }
 
@@ -185,34 +215,37 @@ class Tracker {
   }
 
   /** 请求记录 */
-  addApiLog(request) {
+  addApiLog(response) {
     try {
+      const request = response.config;
       const kayouTraceId = request.headers['kayou-trace-id'];
       const traceMap = {};
+
       if (kayouTraceId) {
         const list = kayouTraceId.split(':');
         traceMap.traceId = list[0];
         traceMap.spanId = list[1];
         traceMap.parentSpanId = list[2];
       }
-      let content = '';
-      if (request.data) {
-        try {
-          content = JSON.stringify(request.data).slice(0, 500);
-        } catch (e) {}
-      }
-      let message = `${request.method}-${request.url}`;
-      if (request.params) {
-        message += `-${JSON.stringify(request.params)}`;
-      }
+      const content =
+        typeof request.data === 'string' ? request.data : JSON.stringify(request.data);
+      const duration = +new Date() - request.startTime;
+      const statusCode = response.status;
       this.pushLog({
         ...this.getCommonInfo(),
         ...traceMap,
         logCategory: 'HttpClient',
         type: 'api',
         level: 'Info',
-        message,
-        content,
+        message: `${request.method}-${request.url}-${statusCode}-${duration}ms`,
+        content: content?.slice(0, 500),
+        requestSize: content?.length || 0,
+        responseSize: response?.request?.responseText?.length || 0,
+        duration,
+        statusCode,
+        httpMethod: request.method,
+        httpPath: request.url,
+        logSession: response.headers['kayou-log-session'],
       });
     } catch (e) {
       console.log(e);
@@ -220,7 +253,7 @@ class Tracker {
   }
 
   /** 报错信息 */
-  addErrLog(e, extra = '') {
+  addErrLog(e, prefix = '', extra = '') {
     try {
       console.log(e);
       const errLog = {
@@ -267,7 +300,7 @@ class Tracker {
       if (errLog.message instanceof Object) {
         errLog.message = JSON.stringify(errLog.message);
       }
-      errLog.message = errLog.message.slice(0, 500);
+      errLog.message = (prefix + errLog.message).slice(0, 500);
       errLog.stack = errLog.stack.slice(0, 500);
       this.pushLog(errLog);
     } catch (err) {
@@ -324,9 +357,10 @@ class Tracker {
 
 export default new Tracker({
   appId: 'Kayou.ywzs.admin',
-  version: '1.0.1', // __APP_VERSION__,
-  env: 'DEV', // { dev: 'DEV', uat: 'UAT', production: 'PRO' }[import.meta.env.VITE_YWZS_ENV],
+  // eslint-disable-next-line no-undef
+  version: '1.0.1',
+  env: 'DEV',
   limitNum: 10,
   showHotSpots: process.env.NODE_ENV !== 'production',
-  baseURL: '', // 'https://logcenter.kayou110.cn/api/applogs',
+  baseURL: 'https://abcxxx.com/api/applogs',
 });

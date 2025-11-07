@@ -25,7 +25,7 @@
 
 class Tracker {
   constructor({
-    appId = 0,
+    appId = '',
     pageNumLimit = 5,
     showHotSpots = false,
     // 请求地址
@@ -144,7 +144,6 @@ class Tracker {
       if (flag) return;
       const entries = entryList.getEntries();
       const lastEntry = entries[entries.length - 1];
-      console.log(entries);
       const pLog = {
         type: 'performance',
         lcp: lastEntry.renderTime || lastEntry.loadTime,

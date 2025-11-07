@@ -1,8 +1,22 @@
 import axios from 'axios';
+import { currentEnv, KAYOUCTX_NAMESPACE } from '@/utils/cookie';
 
 const url = '/api';
 
 const IS_DEV = false; //process.env.NODE_ENV !== 'production';
+
+axios.interceptors.request.use(
+  (config) => {
+    if (!config.headers) {
+      config.headers = {};
+    }
+    config.headers[KAYOUCTX_NAMESPACE] = currentEnv;
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 axios.interceptors.response.use(
   (res) => res.data,
@@ -11,7 +25,9 @@ axios.interceptors.response.use(
 
 /** test */
 export function test() {
-  return axios.get(`${url}/test`);
+  return axios.get(
+    `https://service-azztq3d7-1304999371.sh.apigw.tencentcs.com/release/api/manage/check`
+  );
 }
 
 /** 获取日志 */
